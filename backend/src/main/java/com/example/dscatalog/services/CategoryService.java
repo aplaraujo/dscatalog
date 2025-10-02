@@ -33,8 +33,8 @@ public class CategoryService {
 
     // Busca as categorias por página
     @Transactional(readOnly = true)
-    public Page<CategoryDTO> findAllByPage(String name, Pageable pageable) {
-        Page<Category> categories = categoryRepository.searchByName(name, pageable);
+    public Page<CategoryDTO> findAllByPage(Pageable pageable) {
+        Page<Category> categories = categoryRepository.findAll(pageable);
         return categories.map(cat -> new CategoryDTO(cat));
     }
 
