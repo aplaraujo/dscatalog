@@ -1,12 +1,15 @@
 package com.example.dscatalog.resources;
 
 import com.example.dscatalog.dto.ProductDTO;
+import com.example.dscatalog.entities.Product;
 import com.example.dscatalog.services.ProductService;
+import com.example.dscatalog.services.exceptions.DatabaseException;
 import com.example.dscatalog.services.exceptions.ResourceNotFoundException;
 import com.example.dscatalog.tests.factory.Factory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -35,6 +38,8 @@ public class ProductResourceTests {
     private ProductDTO productDTO;
     private long existingId;
     private long notExistingId;
+    private long dependentId;
+    private Product product;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -42,10 +47,16 @@ public class ProductResourceTests {
         page = new PageImpl<>(List.of(productDTO)); // Instância de objeto concreto
         existingId = 1L;
         notExistingId = 1000L;
+        dependentId = 2L;
+        product = Factory.createProduct();
 
         Mockito.when(productService.findAllByPage(ArgumentMatchers.any())).thenReturn(page);
         Mockito.when(productService.findById(existingId)).thenReturn(productDTO);
         Mockito.when(productService.findById(notExistingId)).thenThrow(ResourceNotFoundException.class);
+
+        Mockito.doNothing().when(productService).delete(existingId);
+        Mockito.doThrow(ResourceNotFoundException.class).when(productService).delete(notExistingId);
+        Mockito.doThrow(DatabaseException.class).when(productService).delete(dependentId);
     }
 
     @Test
@@ -66,6 +77,18 @@ public class ProductResourceTests {
     @Test
     public void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() throws Exception {
         ResultActions result = mockMvc.perform(MockMvcRequestBuilders.get("/products/{id}", notExistingId).accept(MediaType.APPLICATION_JSON));
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void deleteShouldReturnNoContentWhenIdExists() throws Exception {
+        ResultActions result = mockMvc.perform(MockMvcRequestBuilders.delete("/products/{id}", existingId));
+        result.andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void deleteShouldThrowDatabaseExceptionWhenIdDoesNotExist() throws Exception {
+        ResultActions result = mockMvc.perform(MockMvcRequestBuilders.delete("/products/{id}", notExistingId));
         result.andExpect(status().isNotFound());
     }
 }
