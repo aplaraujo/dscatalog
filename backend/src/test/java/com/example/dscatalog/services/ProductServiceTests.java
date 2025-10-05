@@ -1,7 +1,9 @@
 package com.example.dscatalog.services;
 
 import com.example.dscatalog.dto.ProductDTO;
+import com.example.dscatalog.entities.Category;
 import com.example.dscatalog.entities.Product;
+import com.example.dscatalog.repositories.CategoryRepository;
 import com.example.dscatalog.repositories.ProductRepository;
 import com.example.dscatalog.services.exceptions.DatabaseException;
 import com.example.dscatalog.services.exceptions.ResourceNotFoundException;
@@ -17,7 +19,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.example.dscatalog.services.exceptions.ResourceNotFoundException;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,11 +32,16 @@ public class ProductServiceTests {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private CategoryRepository categoryRepository;
+
     private long existingId;
     private long notExistingId;
     private long dependentId;
     private PageImpl<Product> page; // Tipo concreto que representa uma página de dados
     private Product product;
+    private Category category;
+    private ProductDTO productDTO;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -44,6 +50,9 @@ public class ProductServiceTests {
         dependentId = 3L;
         product = Factory.createProduct();
         page = new PageImpl<>(List.of(product));
+        category = Factory.createCategory();
+        productDTO = Factory.createProductDTO();
+
         Mockito.when(productRepository.existsById(existingId)).thenReturn(true);
         Mockito.when(productRepository.existsById(notExistingId)).thenReturn(false);
         Mockito.when(productRepository.existsById(dependentId)).thenReturn(true);
@@ -53,6 +62,23 @@ public class ProductServiceTests {
         Mockito.when(productRepository.save(ArgumentMatchers.any())).thenReturn(product); // Similar inclusão de um produto
         Mockito.when(productRepository.findById(existingId)).thenReturn(Optional.of(product)); // Simular retorno de um id existente
         Mockito.when(productRepository.findById(notExistingId)).thenReturn(Optional.empty()); // Simular retorn de um id não existente
+        Mockito.when(productRepository.getReferenceById(existingId)).thenReturn(product);
+        Mockito.when(productRepository.getReferenceById(notExistingId)).thenThrow(ResourceNotFoundException.class);
+        Mockito.when(categoryRepository.getReferenceById(existingId)).thenReturn(category);
+        Mockito.when(categoryRepository.getReferenceById(notExistingId)).thenThrow(ResourceNotFoundException.class);
+    }
+
+    @Test
+    public void updateShouldReturnProductDTOWhenIdExists() {
+        ProductDTO result = productService.update(existingId, productDTO);
+        Assertions.assertNotNull(result);
+    }
+
+    @Test
+    public void updateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> {
+            productService.update(notExistingId, productDTO);
+        });
     }
 
     @Test
