@@ -1,5 +1,6 @@
 package com.example.dscatalog.services;
 
+import com.example.dscatalog.dto.ProductDTO;
 import com.example.dscatalog.entities.Product;
 import com.example.dscatalog.repositories.ProductRepository;
 import com.example.dscatalog.services.exceptions.DatabaseException;
@@ -10,10 +11,13 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.example.dscatalog.services.exceptions.ResourceNotFoundException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +56,19 @@ public class ProductServiceTests {
     }
 
     @Test
+    public void findByIdShouldReturnProductDTOWhenIdExists() {
+        ProductDTO result = productService.findById(existingId);
+        Assertions.assertNotNull(result);
+    }
+
+    @Test
+    public void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> {
+            productService.findById(notExistingId);
+        });
+    }
+
+    @Test
     public void deleteShouldDoNothingWhenIdExists() {
         Assertions.assertDoesNotThrow(() -> {
             productService.delete(existingId);
@@ -71,5 +88,13 @@ public class ProductServiceTests {
         Assertions.assertThrows(DatabaseException.class, () -> {
             productService.delete(dependentId);
         });
+    }
+
+    @Test
+    public void findAllPagedShouldReturnPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ProductDTO> result = productService.findAllByPage(pageable);
+        Assertions.assertNotNull(result);
+        Mockito.verify(productRepository).findAll(pageable);
     }
 }
