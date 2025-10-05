@@ -14,6 +14,7 @@ import java.util.Optional;
 public class ProductRepositoryTests {
 
     private long existingId;
+    private long nonExistingId;
     private long countTotalProducts;
 
     @Autowired
@@ -22,6 +23,7 @@ public class ProductRepositoryTests {
     @BeforeEach
     void setUp() throws Exception {
         existingId = 1L;
+        nonExistingId = 1000L;
         countTotalProducts = 25L;
     }
 
@@ -41,5 +43,18 @@ public class ProductRepositoryTests {
         productRepository.deleteById(existingId);
         Optional<Product> result = productRepository.findById(existingId);
         Assertions.assertFalse(result.isPresent());
+    }
+
+    @Test
+    public void getShouldReturnNotEmptyOptionalProductWhenIdExists() {
+
+        Optional<Product> result = productRepository.findById(existingId);
+        Assertions.assertTrue(result.isPresent());
+    }
+
+    @Test
+    public void getShouldReturnEmptyOptionalProductWhenIdDoesNotExist() {
+        Optional<Product> result = productRepository.findById(nonExistingId);
+        Assertions.assertTrue(result.isEmpty());
     }
 }
