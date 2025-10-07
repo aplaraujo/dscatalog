@@ -2,7 +2,9 @@ package com.example.dscatalog.entities;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "tb_user")
@@ -16,6 +18,8 @@ public class User {
     @Column(unique = true)
     private String email;
     private String password;
+
+    private final Set<Role> roles = new HashSet<>();
 
     public User() {}
 
@@ -65,6 +69,10 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
     }
 
     @Override
