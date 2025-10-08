@@ -3,6 +3,7 @@ package com.example.dscatalog.resources;
 import com.example.dscatalog.dto.ProductDTO;
 import com.example.dscatalog.dto.UserDTO;
 import com.example.dscatalog.dto.UserInsertDTO;
+import com.example.dscatalog.dto.UserUpdateDTO;
 import com.example.dscatalog.services.ProductService;
 import com.example.dscatalog.services.UserService;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
@@ -43,10 +44,10 @@ public class UserResource {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<UserDTO> update(@PathVariable Long id, @Valid @RequestBody UserDTO dto)
+    public ResponseEntity<UserDTO> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto)
             throws InvalidDefinitionException {
-        dto = userService.update(id, dto);
-        return ResponseEntity.ok(dto);
+        UserDTO newDTO = userService.update(id, dto);
+        return ResponseEntity.ok(newDTO);
     }
 
     @DeleteMapping(value = "/{id}")
