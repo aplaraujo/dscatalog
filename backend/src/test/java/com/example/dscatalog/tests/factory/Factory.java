@@ -8,7 +8,7 @@ import java.time.Instant;
 
 public class Factory {
     public static Product createProduct() {
-        Product product = new Product(1L, "PS5", "The new generation PS5 video game", 700.00, "https://img.com/img.png", Instant.parse("2020-07-20T10:00:00Z"));
+        Product product = new Product(1L, "PS5 Plus", "The new generation PS5 video game", 700.00, "https://img.com/img.png", Instant.parse("2020-07-20T10:00:00Z"));
         product.getCategories().add(createCategory());
         return product;
     }
