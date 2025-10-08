@@ -2,8 +2,10 @@ package com.example.dscatalog.resources.handlers;
 
 import java.time.Instant;
 
+import com.example.dscatalog.dto.ValidationError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,9 +33,14 @@ public class ControllerExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<CustomError> validation(MethodArgumentNotValidException e, HttpServletRequest request) {
+    public ResponseEntity<CustomError> methodArgumentNotValid(MethodArgumentNotValidException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
-        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+        ValidationError err = new ValidationError(Instant.now(), status.value(), "Dados inválidos", request.getRequestURI());
+
+        for(FieldError error: e.getBindingResult().getFieldErrors()) {
+            err.addError(error.getField(), error.getDefaultMessage());
+        }
+
         return ResponseEntity.status(status).body(err);
     }
 }
