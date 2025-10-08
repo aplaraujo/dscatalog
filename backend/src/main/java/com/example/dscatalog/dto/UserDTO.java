@@ -1,16 +1,20 @@
 package com.example.dscatalog.dto;
 
 import com.example.dscatalog.entities.User;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class UserDTO {
     private Long id;
+
+    @NotBlank(message="Campo requerido")
     private String firstName;
     private String lastName;
+
+    @Email(message = "Favor incluir um e-mail válido")
     private String email;
 
     private Set<RoleDTO> roles = new HashSet<>();

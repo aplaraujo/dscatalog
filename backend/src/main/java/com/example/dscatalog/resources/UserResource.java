@@ -6,6 +6,7 @@ import com.example.dscatalog.dto.UserInsertDTO;
 import com.example.dscatalog.services.ProductService;
 import com.example.dscatalog.services.UserService;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,14 +36,14 @@ public class UserResource {
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> insert(@RequestBody UserInsertDTO dto) {
+    public ResponseEntity<UserDTO> insert(@Valid @RequestBody UserInsertDTO dto) {
         UserDTO newDTO = userService.insert(dto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newDTO.getId()).toUri();
         return ResponseEntity.created(uri).body(newDTO);
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<UserDTO> update(@PathVariable Long id, @RequestBody UserDTO dto)
+    public ResponseEntity<UserDTO> update(@PathVariable Long id, @Valid @RequestBody UserDTO dto)
             throws InvalidDefinitionException {
         dto = userService.update(id, dto);
         return ResponseEntity.ok(dto);
