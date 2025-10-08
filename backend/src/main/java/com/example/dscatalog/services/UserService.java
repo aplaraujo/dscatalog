@@ -2,6 +2,7 @@ package com.example.dscatalog.services;
 
 import com.example.dscatalog.dto.RoleDTO;
 import com.example.dscatalog.dto.UserDTO;
+import com.example.dscatalog.dto.UserInsertDTO;
 import com.example.dscatalog.entities.Role;
 import com.example.dscatalog.entities.User;
 import com.example.dscatalog.repositories.RoleRepository;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,9 @@ public class UserService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
     @Transactional(readOnly = true)
     public Page<UserDTO> findAllPaged(PageRequest pageRequest) {
         Page<User> list = userRepository.findAll(pageRequest);
@@ -41,9 +46,10 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO insert(UserDTO dto) {
+    public UserDTO insert(UserInsertDTO dto) {
         User entity = new User();
         copyDtoToEntity(dto, entity);
+        entity.setPassword(bCryptPasswordEncoder.encode(dto.getPassword()));
         entity = userRepository.save(entity);
         return new UserDTO(entity);
     }
