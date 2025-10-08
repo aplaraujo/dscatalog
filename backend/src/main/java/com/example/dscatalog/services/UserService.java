@@ -15,10 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +39,25 @@ public class UserService implements UserDetailsService {
     private RoleRepository roleRepository;
 
     @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        List<UserDetailsProjection> result = userRepository.searchUserAndRolesByEmail(username);
+
+        if (result.isEmpty()) {
+            throw new UsernameNotFoundException("User not found!");
+        }
+        User user = new User();
+        user.setEmail(username);
+        user.setPassword(result.getFirst().getPassword());
+
+        for(UserDetailsProjection projection:result) {
+            user.addRole(new Role(projection.getRoleId(), projection.getAuthority()));
+        }
+
+        return user;
+    }
 
     @Transactional(readOnly = true)
     public Page<UserDTO> findAllPaged(PageRequest pageRequest) {
@@ -55,7 +76,7 @@ public class UserService implements UserDetailsService {
     public UserDTO insert(UserInsertDTO dto) {
         User entity = new User();
         copyDtoToEntity(dto, entity);
-        entity.setPassword(bCryptPasswordEncoder.encode(dto.getPassword()));
+        entity.setPassword(passwordEncoder.encode(dto.getPassword()));
         entity = userRepository.save(entity);
         return new UserDTO(entity);
     }
@@ -80,22 +101,22 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        List<UserDetailsProjection> result = userRepository.searchUserAndRolesByEmail(username);
-
-        if (result.isEmpty()) {
+    protected User authenticated() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Jwt jwtPrincipal = (Jwt) authentication.getPrincipal();
+            String username = jwtPrincipal.getClaim("username");
+            User user = userRepository.findByEmail(username);
+            return user;
+        } catch (Exception e) {
             throw new UsernameNotFoundException("User not found!");
         }
-        User user = new User();
-        user.setEmail(username);
-        user.setPassword(result.get(0).getPassword());
+    }
 
-        for(UserDetailsProjection projection:result) {
-            user.addRole(new Role(projection.getRoleId(), projection.getAuthority()));
-        }
-
-        return user;
+    @Transactional(readOnly = true)
+    public UserDTO getMe() {
+        User user = authenticated();
+        return new UserDTO(user);
     }
 
     private void copyDtoToEntity(UserDTO dto, User entity) {
