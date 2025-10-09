@@ -27,15 +27,7 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public List<CategoryDTO> findAll() {
         List<Category> list = categoryRepository.findAll();
-        List<CategoryDTO> result = list.stream().map(cat -> new CategoryDTO(cat)).toList();
-        return result;
-    }
-
-    // Busca as categorias por página
-    @Transactional(readOnly = true)
-    public Page<CategoryDTO> findAllByPage(Pageable pageable) {
-        Page<Category> categories = categoryRepository.findAll(pageable);
-        return categories.map(cat -> new CategoryDTO(cat));
+        return list.stream().map(CategoryDTO::new).toList();
     }
 
     @Transactional(readOnly = true)
