@@ -2,6 +2,7 @@ package com.example.dscatalog.resources;
 
 import java.net.URI;
 
+import com.example.dscatalog.projections.ProductProjection;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,8 +38,8 @@ public class ProductResource {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductDTO>> findAll(Pageable pageable) {
-        Page<ProductDTO> dto = productService.findAllByPage(pageable);
+    public ResponseEntity<Page<ProductProjection>> findAll(Pageable pageable) {
+        Page<ProductProjection> dto = productService.testQuery(pageable);
         return ResponseEntity.ok(dto);
     }
 

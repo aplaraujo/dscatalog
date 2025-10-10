@@ -1,8 +1,10 @@
 package com.example.dscatalog.services;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.dscatalog.projections.ProductProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -91,5 +93,10 @@ public class ProductService {
             Category cat = categoryRepository.getReferenceById(catDTO.getId());
             entity.getCategories().add(cat);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductProjection> testQuery(Pageable pageable) {
+        return productRepository.searchProducts(Arrays.asList(), "", pageable);
     }
 }
