@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.example.dscatalog.projections.ProductProjection;
+import com.example.dscatalog.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -109,6 +110,7 @@ public class ProductService {
         List<Long> productIds = page.map(ProductProjection::getId).toList();
         // Buscar lista de produtos
         List<Product> entities = productRepository.searchProductsWithCategories(productIds);
+        entities = Utils.replace(page.getContent(), entities);
         // Converter a lista de produtos para DTO
         List<ProductDTO> dtos = entities.stream().map(prod -> new ProductDTO(prod, prod.getCategories())).toList();
         // Gerar uma página
