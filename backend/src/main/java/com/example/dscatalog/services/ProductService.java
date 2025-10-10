@@ -97,7 +97,7 @@ public class ProductService {
         }
     }
 
-
+    @SuppressWarnings("unchecked")
     @Transactional(readOnly = true)
     public Page<ProductDTO> findAllPaged(String name, String categoryId, Pageable pageable) {
         List<Long> categoryIds = List.of();
@@ -110,7 +110,7 @@ public class ProductService {
         List<Long> productIds = page.map(ProductProjection::getId).toList();
         // Buscar lista de produtos
         List<Product> entities = productRepository.searchProductsWithCategories(productIds);
-        entities = Utils.replace(page.getContent(), entities);
+        entities = (List<Product>) Utils.replace(page.getContent(), entities);
         // Converter a lista de produtos para DTO
         List<ProductDTO> dtos = entities.stream().map(prod -> new ProductDTO(prod, prod.getCategories())).toList();
         // Gerar uma página
