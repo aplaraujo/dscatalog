@@ -25,16 +25,17 @@ public class UserResource {
     @Autowired
     private UserService userService;
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_CLIENT')")
-    @GetMapping(value="/me")
-    public ResponseEntity<UserDTO> getMe() {
-        UserDTO dto = userService.getMe();
-        return ResponseEntity.ok(dto);
-    }
-
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @GetMapping(value = "/{id}")
     public ResponseEntity<UserDTO> findById(@PathVariable Long id) {
         UserDTO dto = userService.findById(id);
+        return ResponseEntity.ok().body(dto);
+    }
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_OPERATOR')")
+    @GetMapping(value = "/profile")
+    public ResponseEntity<UserDTO> findProfile() {
+        UserDTO dto = userService.findProfile();
         return ResponseEntity.ok().body(dto);
     }
 

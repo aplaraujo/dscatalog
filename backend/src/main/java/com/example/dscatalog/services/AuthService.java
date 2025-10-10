@@ -6,9 +6,8 @@ import com.example.dscatalog.entities.PasswordRecover;
 import com.example.dscatalog.entities.User;
 import com.example.dscatalog.repositories.PasswordRecoverRepository;
 import com.example.dscatalog.repositories.UserRepository;
-import com.example.dscatalog.services.exceptions.ForbiddenException;
 import com.example.dscatalog.services.exceptions.ResourceNotFoundException;
-import jakarta.validation.Valid;
+import com.example.dscatalog.utils.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,8 +20,6 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private UserRepository userRepository;
@@ -41,13 +38,6 @@ public class AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    public void validateSelfOrAdmin(long userId) {
-        User me = userService.authenticated();
-        if (!me.hasRole("ROLE_ADMIN") && !me.getId().equals(userId)) {
-            throw new ForbiddenException("Access denied");
-        }
-    }
 
     @Transactional
     public void createRecoverToken(EmailDTO body) {
@@ -79,4 +69,10 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(body.getPassword()));
         user = userRepository.save(user);
     }
+
+    protected User authenticated() {
+        String username = AuthUtils.getAuthenticatedUsername();
+        return userRepository.findByEmail(username);
+    }
+
 }
