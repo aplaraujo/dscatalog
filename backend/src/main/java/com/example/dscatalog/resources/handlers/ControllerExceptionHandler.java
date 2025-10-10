@@ -3,6 +3,7 @@ package com.example.dscatalog.resources.handlers;
 import java.time.Instant;
 
 import com.example.dscatalog.dto.ValidationError;
+import com.example.dscatalog.services.exceptions.EmailException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -41,6 +42,13 @@ public class ControllerExceptionHandler {
             err.addError(error.getField(), error.getDefaultMessage());
         }
 
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(EmailException.class)
+    public ResponseEntity<CustomError> email(EmailException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
     }
 }
