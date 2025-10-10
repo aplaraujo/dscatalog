@@ -1,9 +1,6 @@
 package com.example.dscatalog.resources;
 
-import com.example.dscatalog.dto.EmailDTO;
-import com.example.dscatalog.dto.UserDTO;
-import com.example.dscatalog.dto.UserInsertDTO;
-import com.example.dscatalog.dto.UserUpdateDTO;
+import com.example.dscatalog.dto.*;
 import com.example.dscatalog.services.AuthService;
 import com.example.dscatalog.services.UserService;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
@@ -32,4 +29,9 @@ public class AuthResource {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping(value = "/new-password")
+    public ResponseEntity<Void> saveNewPassword(@Valid @RequestBody NewPasswordDTO body) {
+        authService.saveNewPassword(body);
+        return ResponseEntity.noContent().build();
+    }
 }

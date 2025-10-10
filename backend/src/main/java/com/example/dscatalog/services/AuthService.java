@@ -1,18 +1,22 @@
 package com.example.dscatalog.services;
 
 import com.example.dscatalog.dto.EmailDTO;
+import com.example.dscatalog.dto.NewPasswordDTO;
 import com.example.dscatalog.entities.PasswordRecover;
 import com.example.dscatalog.entities.User;
 import com.example.dscatalog.repositories.PasswordRecoverRepository;
 import com.example.dscatalog.repositories.UserRepository;
 import com.example.dscatalog.services.exceptions.ForbiddenException;
 import com.example.dscatalog.services.exceptions.ResourceNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -34,6 +38,9 @@ public class AuthService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public void validateSelfOrAdmin(long userId) {
         User me = userService.authenticated();
@@ -60,5 +67,16 @@ public class AuthService {
         String text = "Acesse o link para definir uma nova senha\n\n" + recoverUri + token + ". Validade de " + tokenMinutes + " minutos.";
 
         emailService.sendEmail(body.getEmail(), "Recuperação de senha", text);
+    }
+
+    @Transactional
+    public void saveNewPassword(NewPasswordDTO body) {
+        List<PasswordRecover> result = passwordRecoverRepository.searchValidTokens(body.getToken(), Instant.now());
+        if (result.isEmpty()) {
+            throw new ResourceNotFoundException("Token inválido!");
+        }
+        User user = userRepository.findByEmail(result.get(0).getEmail());
+        user.setPassword(passwordEncoder.encode(body.getPassword()));
+        user = userRepository.save(user);
     }
 }
