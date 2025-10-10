@@ -8,6 +8,7 @@ import com.example.dscatalog.projections.ProductProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -95,12 +96,23 @@ public class ProductService {
         }
     }
 
+
     @Transactional(readOnly = true)
-    public Page<ProductProjection> findAllPaged(String name, String categoryId, Pageable pageable) {
+    public Page<ProductDTO> findAllPaged(String name, String categoryId, Pageable pageable) {
         List<Long> categoryIds = List.of();
         if (!"0".equals(categoryId)) {
             categoryIds = Arrays.stream(categoryId.split(",")).map(Long::parseLong).toList();
         }
-        return productRepository.searchProducts(categoryIds, name, pageable);
+        // Buscar pela página
+        Page<ProductProjection> page = productRepository.searchProducts(categoryIds, name, pageable);
+        // Busca auxiliar para obter os ids dos produtos
+        List<Long> productIds = page.map(ProductProjection::getId).toList();
+        // Buscar lista de produtos
+        List<Product> entities = productRepository.searchProductsWithCategories(productIds);
+        // Converter a lista de produtos para DTO
+        List<ProductDTO> dtos = entities.stream().map(prod -> new ProductDTO(prod, prod.getCategories())).toList();
+        // Gerar uma página
+        Page<ProductDTO> pageDTO = new PageImpl<>(dtos, page.getPageable(), page.getTotalElements());
+        return pageDTO;
     }
 }
